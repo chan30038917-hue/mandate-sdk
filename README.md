@@ -2,6 +2,8 @@
 
 SDK para mandatos de pago verificables con passkey en Monad.
 
+> **Landing page:** https://mandate-sdk.vercel.app
+
 ## Instalacion
 
 ```
