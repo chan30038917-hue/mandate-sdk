@@ -8,6 +8,12 @@ SDK para mandatos de pago verificables con passkey en Monad.
 npm install github:chan30038917-hue/mandate-sdk
 ```
 
+## Que es esto
+
+Mandate SDK es la **capa de verificacion de limites de gasto** para agentes autonomos en Monad. Permite que el dueno de un agente firme un "mandato" con su passkey (WebAuthn) que define: maximo por transaccion, maximo por periodo, y expiracion. El agente paga solo, dentro de esos limites, con verificacion on-chain.
+
+No es una plataforma. Es una primitiva que cualquier agente puede integrar.
+
 ## Contratos desplegados en Monad Mainnet
 
 Estos son contratos inteligentes, no billeteras.
@@ -32,9 +38,33 @@ https://monadscan.com/address/0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD
 - **Explorador:** https://monadscan.com
 - **Moneda:** MON
 
-## Que es esto
+## Caso de uso real: agente que paga APIs
 
-Permite que agentes autonomos paguen por servicios sin exponer las claves privadas del usuario. El dueno firma un mandato con su passkey que define limites de gasto, y el agente paga solo, dentro de esos limites, con verificacion on-chain.
+Un agente quiere pagar 0.5 MON por una llamada a una API de precios. El dueno del agente ya no tiene que aprobar cada pago.
+
+```javascript
+import { MandateSDK } from "mandate-sdk";
+
+const sdk = new MandateSDK({ privateKey: process.env.PRIVATE_KEY });
+
+// 1. El dueno firma un mandato (una vez)
+const { mandateId, passkey } = await sdk.registerMandate({
+  maxPerTx: "1",      // maximo 1 MON por transaccion
+  maxPerPeriod: "10", // maximo 10 MON por dia
+});
+
+// 2. El agente paga la API automaticamente
+const result = await sdk.pay({
+  mandateId,
+  passkey,
+  amount: "0.5",
+  recipient: "0xAPI...",
+});
+
+console.log("Pago exitoso. Comision:", result.fee, "MON");
+```
+
+El agente paga solo. El dueno mantiene el control. No hay custodia de fondos.
 
 ## Uso rapido
 
@@ -100,6 +130,12 @@ Consulta cuanto se ha gastado en el periodo actual.
 - Comision minima: 0.03 MON
 - Se aplica el mayor de los dos
 
+## Integracion como primitiva
+
+Mandate SDK esta disenado para ser integrado por otras plataformas de agentes. Si ya tienes un agente que paga APIs o servicios, puedes anadir el `PaymentGate` como capa de verificacion de limites sin cambiar tu arquitectura.
+
+El `PaymentGate` es un contrato independiente. Cualquier aplicacion puede llamarlo para verificar que un pago respeta los limites firmados por el dueno.
+
 ## Limitaciones conocidas
 
 ### Gas en Monad
@@ -113,6 +149,12 @@ block.timestamp puede ser ajustado por validadores en una ventana de segundos. P
 ### Precompilado P256
 
 El formato de entrada es msg_hash(32) + r(32) + s(32) + pubkey_x(32) + pubkey_y(32), que es el estandar EIP-7951.
+
+## Proximos pasos
+
+- Integracion opcional con el Reputation Registry de ERC-8004 para verificar la reputacion del destinatario antes de autorizar un pago.
+- Mas ejemplos de integracion con agentes MCP y frameworks de agentes.
+- Documentacion de casos de uso por tipo de agente (trading, datos, computo).
 
 ## Licencia
 
