@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandate SDK — Verifiable payment limits for AI agents on Monad</title>
+    <meta name="description" content="Sign a mandate with your passkey. Your agent pays autonomously within limits. On-chain verification. No custody.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #e5e5e5; font-family: system-ui, -apple-system, sans-serif; }
+        .accent { color: #836EF9; }
+        .btn-primary { background-color: #836EF9; color: white; }
+        .btn-primary:hover { background-color: #6b5ce0; }
+        .btn-secondary { border: 1px solid #333; color: #e5e5e5; }
+        .btn-secondary:hover { border-color: #836EF9; color: #836EF9; }
+        pre { background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 14px; }
+        code { color: #a78bfa; }
+        .card { background-color: #111; border: 1px solid #1a1a1a; border-radius: 12px; }
+        .card:hover { border-color: #333; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HERO -->
+    <section class="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">
+        <div class="inline-block px-3 py-1 mb-6 text-xs rounded-full border border-gray-800 text-gray-400">
+            Live on Monad Mainnet
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+            Verifiable payment limits<br>
+            <span class="accent">for AI agents</span>
+        </h1>
+        <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
+            Sign a mandate with your passkey. Your agent pays autonomously within limits. 
+            On-chain verification. No custody.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="btn-primary px-6 py-3 rounded-lg font-medium text-center">
+                View on GitHub
+            </a>
+            <a href="#install" class="btn-secondary px-6 py-3 rounded-lg font-medium text-center">
+                Install in 30 seconds
+            </a>
+        </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
+        <h2 class="text-2xl font-bold mb-4">The problem</h2>
+        <p class="text-gray-400 text-lg">
+            AI agents need to pay for services autonomously. But giving them a private key 
+            means a bug or hack can drain the entire account. Manual approval defeats the purpose 
+            of autonomy.
+        </p>
+    </section>
+
+    <!-- SOLUTION -->
+    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
+        <h2 class="text-2xl font-bold mb-6">The solution</h2>
+        <p class="text-gray-400 text-lg mb-8">
+            Mandate SDK lets the owner sign a mandate with their passkey that defines 
+            spending limits. The agent pays only within those limits.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="card p-6">
+                <div class="accent text-2xl mb-2">🔐</div>
+                <h3 class="font-semibold mb-1">Passkey-signed</h3>
+                <p class="text-sm text-gray-500">Owner signs with WebAuthn. No private key exposed.</p>
+            </div>
+            <div class="card p-6">
+                <div class="accent text-2xl mb-2">⛓️</div>
+                <h3 class="font-semibold mb-1">On-chain verified</h3>
+                <p class="text-sm text-gray-500">P256 precompile validates every payment on Monad.</p>
+            </div>
+            <div class="card p-6">
+                <div class="accent text-2xl mb-2">🚫</div>
+                <h3 class="font-semibold mb-1">No custody</h3>
+                <p class="text-sm text-gray-500">The contract never holds funds. Payments go directly.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
+        <h2 class="text-2xl font-bold mb-6">How it works</h2>
+        <div class="card p-6 text-center">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-sm">
+                <div class="px-4 py-2 rounded border border-gray-700">Owner</div>
+                <div class="text-gray-600">→</div>
+                <div class="px-4 py-2 rounded border border-gray-700">MandateRegistry</div>
+                <div class="text-gray-600">→</div>
+                <div class="px-4 py-2 rounded border border-gray-700">PaymentGate</div>
+                <div class="text-gray-600">→</div>
+                <div class="px-4 py-2 rounded border border-gray-700">Recipient</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install" class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
+        <h2 class="text-2xl font-bold mb-6">Install in 30 seconds</h2>
+        <pre><code>npm install github:chan30038917-hue/mandate-sdk</code></pre>
+        <p class="text-gray-400 mt-6 mb-4">Then use it in 10 lines:</p>
+        <pre><code>import { MandateSDK } from "mandate-sdk";
+
+const sdk = new MandateSDK({ privateKey: process.env.PRIVATE_KEY });
+
+// Owner signs a mandate (once)
+const { mandateId, passkey } = await sdk.registerMandate({
+  maxPerTx: "1",
+  maxPerPeriod: "10",
+});
+
+// Agent pays autonomously
+const result = await sdk.pay({
+  mandateId,
+  passkey,
+  amount: "0.5",
+  recipient: "0x...",
+});</code></pre>
+    </section>
+
+    <!-- CONTRACTS -->
+    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
+        <h2 class="text-2xl font-bold mb-6">Verified contracts on Monad Mainnet</h2>
+        <div class="space-y-4">
+            <div class="card p-5">
+                <div class="text-sm text-gray-500 mb-1">MandateRegistry</div>
+                <code class="text-sm">0x7695Cf7a86d6D08b5283a69c10f94b014D421649</code>
+            </div>
+            <div class="card p-5">
+                <div class="text-sm text-gray-500 mb-1">PaymentGate</div>
+                <code class="text-sm">0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900 text-center text-gray-600 text-sm">
+        <p>Mandate SDK — built on Monad Mainnet</p>
+        <p class="mt-2">
+            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="hover:text-gray-400">GitHub</a>
+        </p>
+    </footer>
+
+</body>
+</html>
