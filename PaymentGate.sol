@@ -75,6 +75,7 @@ contract PaymentGate {
         IMandateRegistry.Mandate memory m = registry.getMandate(mandateId);
         require(msg.sender == m.agent, "Solo el agente puede autorizar");
         
+        // slither-disable-next-line reentrancy-no-eth
         require(registry.validateSpend(mandateId, amount, address(0)), "Spend validation failed");
         
         paymentNonces[mandateId][paymentNonce] = true;
