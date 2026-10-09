@@ -2,18 +2,10 @@ import { ethers } from "ethers";
 import { generatePasskey, signMessage, toBytes32 } from "./passkey.js";
 import { MANDATE_REGISTRY_ABI, PAYMENT_GATE_ABI } from "./abis.js";
 
-const DEFAULT_RPC = "https://testnet-rpc.monad.xyz";
-const DEFAULT_REGISTRY = "0xa0fE5E39eA07Fe2FEb94d9Acd9b0dD495E8f5809";
-const DEFAULT_GATE = "0x32C3B6251eDaCa8626217D4C87C82fcB3360F118";
+const DEFAULT_RPC = "https://rpc.monad.xyz";
+const DEFAULT_REGISTRY = "0x7695Cf7a86d6D08b5283a69c10f94b014D421649";
+const DEFAULT_GATE = "0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD";
 
-/**
- * MandateSDK: SDK para gestionar mandatos de pago verificables con passkey en Monad.
- * 
- * Uso basico:
- *   const sdk = new MandateSDK({ privateKey });
- *   const { mandateId, passkey } = await sdk.registerMandate({ maxPerTx: "10" });
- *   await sdk.pay({ mandateId, passkey, amount: "1.0", recipient: "0x..." });
- */
 export class MandateSDK {
   constructor({ privateKey, rpcUrl, registryAddress, gateAddress }) {
     if (!privateKey) throw new Error("privateKey es requerido");
@@ -25,9 +17,6 @@ export class MandateSDK {
     this.gate = new ethers.Contract(this.gateAddress, PAYMENT_GATE_ABI, this.wallet);
   }
 
-  /**
-   * Devuelve informacion basica de la conexion.
-   */
   async info() {
     const network = await this.provider.getNetwork();
     const balance = await this.provider.getBalance(this.wallet.address);
@@ -47,9 +36,6 @@ export class MandateSDK {
     };
   }
 
-  /**
-   * Registra un mandato firmado con un passkey P-256.
-   */
   async registerMandate({ maxPerTx, maxPerPeriod, periodSeconds = 86400, validDays = 30 }) {
     if (!maxPerTx) throw new Error("maxPerTx es requerido");
     if (!maxPerPeriod) throw new Error("maxPerPeriod es requerido");
