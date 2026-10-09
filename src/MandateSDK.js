@@ -4,7 +4,7 @@ import { MANDATE_REGISTRY_ABI, PAYMENT_GATE_ABI } from "./abis.js";
 
 const DEFAULT_RPC = "https://testnet-rpc.monad.xyz";
 const DEFAULT_REGISTRY = "0xa0fE5E39eA07Fe2FEb94d9Acd9b0dD495E8f5809";
-const DEFAULT_GATE = "0x0a8fa25b9b96F158ddd863f65DdB6CA8b8c6C28a";
+const DEFAULT_GATE = "0x32C3B6251eDaCa8626217D4C87C82fcB3360F118";
 
 /**
  * MandateSDK: SDK para gestionar mandatos de pago verificables con passkey en Monad.
@@ -12,7 +12,7 @@ const DEFAULT_GATE = "0x0a8fa25b9b96F158ddd863f65DdB6CA8b8c6C28a";
  * Uso basico:
  *   const sdk = new MandateSDK({ privateKey });
  *   const { mandateId, passkey } = await sdk.registerMandate({ maxPerTx: "10" });
- *   await sdk.pay({ mandateId, amount: "1.0", recipient: "0x..." });
+ *   await sdk.pay({ mandateId, passkey, amount: "1.0", recipient: "0x..." });
  */
 export class MandateSDK {
   constructor({ privateKey, rpcUrl, registryAddress, gateAddress }) {
@@ -33,6 +33,7 @@ export class MandateSDK {
     const balance = await this.provider.getBalance(this.wallet.address);
     const feeBps = await this.gate.feeBps();
     const minFee = await this.gate.minFee();
+    const feeRecipient = await this.gate.feeRecipient();
     return {
       chainId: network.chainId.toString(),
       wallet: this.wallet.address,
@@ -40,26 +41,20 @@ export class MandateSDK {
       feeBps: Number(feeBps),
       feePercent: (Number(feeBps) / 100).toString() + "%",
       minFee: ethers.formatEther(minFee),
+      feeRecipient,
+      registry: this.registryAddress,
+      gate: this.gateAddress,
     };
   }
 
   /**
    * Registra un mandato firmado con un passkey P-256.
-   * @param {Object} opts
-   * @param {string} opts.maxPerTx - Limite por transaccion en MON (ej "0.1")
-   * @param {string} opts.maxPerPeriod - Limite por periodo en MON (ej "1.0")
-   * @param {number} opts.periodSeconds - Duracion del periodo en segundos (default 86400)
-   * @param {number} opts.validDays - Dias de validez del mandato (default 30)
-   * @returns {Object} { mandateId, passkey, tx, receipt }
    */
   async registerMandate({ maxPerTx, maxPerPeriod, periodSeconds = 86400, validDays = 30 }) {
     if (!maxPerTx) throw new Error("maxPerTx es requerido");
     if (!maxPerPeriod) throw new Error("maxPerPeriod es requerido");
 
-    // Generar passkey
     const passkey = generatePasskey();
-
-    // Crear mandate ID unico
     const mandateId = ethers.keccak256(ethers.toUtf8Bytes(`mandate-${Date.now()}-${Math.random()}`));
 
     const mandate = {
@@ -72,17 +67,14 @@ export class MandateSDK {
       nonce: ethers.keccak256(ethers.toUtf8Bytes(`nonce-${Date.now()}-${Math.random()}`)),
     };
 
-    // Hash del mandato
     const encodedMandate = ethers.AbiCoder.defaultAbiCoder().encode(
       ["tuple(address,address,uint256,uint256,uint256,uint64,bytes32)", "bytes32"],
       [[mandate.agent, mandate.token, mandate.maxPerTx, mandate.maxPerPeriod, mandate.periodSeconds, mandate.validUntil, mandate.nonce], mandateId]
     );
     const messageHash = ethers.keccak256(encodedMandate);
 
-    // Firmar
     const { r, s } = signMessage(messageHash, passkey.privateKey);
 
-    // Enviar transaccion
     const tx = await this.registry.registerMandate(
       mandateId,
       mandate,
@@ -103,9 +95,6 @@ export class MandateSDK {
     };
   }
 
-  /**
-   * Verifica si un mandato esta activo.
-   */
   async isMandateActive(mandateId, passkey) {
     return await this.registry.isMandateActive(
       mandateId,
@@ -114,9 +103,6 @@ export class MandateSDK {
     );
   }
 
-  /**
-   * Consulta los datos de un mandato.
-   */
   async getMandate(mandateId) {
     const m = await this.registry.getMandate(mandateId);
     return {
@@ -130,9 +116,6 @@ export class MandateSDK {
     };
   }
 
-  /**
-   * Consulta el estado de gasto de un mandato.
-   */
   async getSpendState(mandateId) {
     const s = await this.registry.getSpendState(mandateId);
     return {
@@ -141,24 +124,12 @@ export class MandateSDK {
     };
   }
 
-  /**
-   * Calcula la comision para un monto dado.
-   */
   async calculateFee(amountMON) {
     const amount = ethers.parseEther(amountMON);
     const fee = await this.gate.calculateFee(amount);
     return ethers.formatEther(fee);
   }
 
-  /**
-   * Autoriza un pago a traves del PaymentGate.
-   * @param {Object} opts
-   * @param {string} opts.mandateId
-   * @param {Object} opts.passkey - El passkey del mandato
-   * @param {string} opts.amount - Monto en MON (ej "1.0")
-   * @param {string} opts.recipient - Direccion que recibe el pago neto
-   * @returns {Object} { tx, receipt, fee, netAmount }
-   */
   async pay({ mandateId, passkey, amount, recipient }) {
     if (!mandateId) throw new Error("mandateId es requerido");
     if (!passkey) throw new Error("passkey es requerido");
