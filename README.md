@@ -2,28 +2,28 @@
 
 SDK para mandatos de pago verificables con passkey en Monad.
 
-## Contratos desplegados en Monad Testnet
+## Contratos desplegados en Monad Mainnet
 
 Estos son contratos inteligentes, no billeteras.
 
 **MandateRegistry** — Almacena los mandatos firmados con passkey y valida los limites de gasto.
 
-Contrato: `0xa0fE5E39eA07Fe2FEb94d9Acd9b0dD495E8f5809`
+Contrato: `0x7695Cf7a86d6D08b5283a69c10f94b014D421649`
 
-https://testnet.monadscan.com/address/0xa0fE5E39eA07Fe2FEb94d9Acd9b0dD495E8f5809
+https://monadscan.com/address/0x7695Cf7a86d6D08b5283a69c10f94b014D421649
 
 **PaymentGate** — Autoriza los pagos, verifica el mandato, cobra la comision y envia el pago neto.
 
-Contrato: `0x32C3B6251eDaCa8626217D4C87C82fcB3360F118`
+Contrato: `0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD`
 
-https://testnet.monadscan.com/address/0x32C3B6251eDaCa8626217D4C87C82fcB3360F118
+https://monadscan.com/address/0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD
 
 ## Red
 
-- **Red:** Monad Testnet
-- **Chain ID:** `10143`
-- **RPC:** `https://testnet-rpc.monad.xyz`
-- **Explorador:** https://testnet.monadscan.com
+- **Red:** Monad Mainnet
+- **Chain ID:** `143`
+- **RPC:** `https://rpc.monad.xyz`
+- **Explorador:** https://monadscan.com
 - **Moneda:** MON
 
 ## Instalacion
