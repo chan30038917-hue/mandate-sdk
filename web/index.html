@@ -7,100 +7,279 @@
     <meta name="description" content="Sign a mandate with your passkey. Your agent pays autonomously within limits. On-chain verification. No custody.">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0a0a0a; color: #e5e5e5; font-family: system-ui, -apple-system, sans-serif; }
-        .accent { color: #836EF9; }
-        .btn-primary { background-color: #836EF9; color: white; }
-        .btn-primary:hover { background-color: #6b5ce0; }
-        .btn-secondary { border: 1px solid #333; color: #e5e5e5; }
-        .btn-secondary:hover { border-color: #836EF9; color: #836EF9; }
-        pre { background-color: #111; border: 1px solid #222; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 14px; }
-        code { color: #a78bfa; }
-        .card { background-color: #111; border: 1px solid #1a1a1a; border-radius: 12px; }
-        .card:hover { border-color: #333; }
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: #0a0a0f;
+            color: #e5e5e5;
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Fondo con degradado animado */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 0%, rgba(131, 110, 249, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(131, 110, 249, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(50, 30, 100, 0.3) 0%, transparent 70%),
+                linear-gradient(180deg, #0a0a0f 0%, #0d0a1a 50%, #0a0a0f 100%);
+            z-index: -2;
+        }
+
+        /* Patrón de red neuronal de fondo */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(131, 110, 249, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 75% 60%, rgba(131, 110, 249, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 45% 80%, rgba(131, 110, 249, 0.06) 1px, transparent 1px),
+                radial-gradient(circle at 85% 15%, rgba(131, 110, 249, 0.06) 1px, transparent 1px),
+                linear-gradient(rgba(131, 110, 249, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(131, 110, 249, 0.03) 1px, transparent 1px);
+            background-size: 
+                400px 400px, 
+                500px 500px, 
+                600px 600px, 
+                450px 450px,
+                40px 40px,
+                40px 40px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Título 3D */
+        .title-3d {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            text-shadow: 
+                0 1px 0 #4a3a8a,
+                0 2px 0 #3d2e73,
+                0 3px 0 #30245c,
+                0 4px 0 #231a45,
+                0 5px 0 #1a1333,
+                0 6px 0 #100b22,
+                0 8px 20px rgba(131, 110, 249, 0.4),
+                0 15px 40px rgba(131, 110, 249, 0.2);
+            transform: perspective(500px) rotateX(2deg);
+        }
+
+        .title-accent {
+            background: linear-gradient(135deg, #a78bfa 0%, #836EF9 50%, #6b5ce0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 30px rgba(131, 110, 249, 0.6));
+            text-shadow: none;
+        }
+
+        .accent { color: #a78bfa; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #836EF9 0%, #6b5ce0 100%);
+            color: white;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            box-shadow: 0 0 20px rgba(131, 110, 249, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #9b86fb 0%, #7d6ef0 100%);
+            box-shadow: 0 0 40px rgba(131, 110, 249, 0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            border: 1px solid rgba(131, 110, 249, 0.3);
+            color: #e5e5e5;
+            background: rgba(20, 15, 40, 0.5);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            border-color: #836EF9;
+            color: #a78bfa;
+            box-shadow: 0 0 20px rgba(131, 110, 249, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Cards con efecto glass */
+        .card {
+            background: linear-gradient(135deg, rgba(25, 20, 50, 0.7) 0%, rgba(15, 12, 30, 0.7) 100%);
+            border: 1px solid rgba(131, 110, 249, 0.15);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(131, 110, 249, 0.5), transparent);
+        }
+        .card:hover {
+            border-color: rgba(131, 110, 249, 0.4);
+            box-shadow: 0 0 30px rgba(131, 110, 249, 0.15);
+            transform: translateY(-4px);
+        }
+
+        /* Código */
+        pre {
+            background: rgba(10, 8, 20, 0.8);
+            border: 1px solid rgba(131, 110, 249, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 0 30px rgba(131, 110, 249, 0.05);
+        }
+        code { 
+            color: #a78bfa;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        }
+
+        /* Badge "live" con pulso */
+        .badge-live {
+            background: rgba(131, 110, 249, 0.1);
+            border: 1px solid rgba(131, 110, 249, 0.4);
+            color: #a78bfa;
+            position: relative;
+        }
+        .badge-live::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #a78bfa;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 10px #a78bfa;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* Secciones con separador glow */
+        .section-glow {
+            border-top: 1px solid transparent;
+            border-image: linear-gradient(90deg, transparent, rgba(131, 110, 249, 0.3), transparent) 1;
+        }
+
+        /* Subtítulo hero */
+        .hero-sub {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #a0a0b0;
+        }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- HERO -->
-    <section class="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">
-        <div class="inline-block px-3 py-1 mb-6 text-xs rounded-full border border-gray-800 text-gray-400">
-            Live on Monad Mainnet
+    <section class="max-w-5xl mx-auto px-6 pt-28 pb-20 text-center relative">
+        <div class="badge-live inline-block px-4 py-1.5 mb-8 text-xs rounded-full font-medium tracking-wide">
+            LIVE ON MONAD MAINNET
         </div>
-        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6">
+        
+        <h1 class="title-3d mb-8">
             Verifiable payment limits<br>
-            <span class="accent">for AI agents</span>
+            <span class="title-accent">for AI agents</span>
         </h1>
-        <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-10">
-            Sign a mandate with your passkey. Your agent pays autonomously within limits. 
+        
+        <p class="hero-sub max-w-2xl mx-auto mb-12">
+            Sign a mandate with your passkey. Your agent pays autonomously within limits.<br>
             On-chain verification. No custody.
         </p>
+        
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="btn-primary px-6 py-3 rounded-lg font-medium text-center">
+            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="btn-primary px-8 py-3.5 rounded-xl font-semibold text-center">
                 View on GitHub
             </a>
-            <a href="#install" class="btn-secondary px-6 py-3 rounded-lg font-medium text-center">
+            <a href="#install" class="btn-secondary px-8 py-3.5 rounded-xl font-semibold text-center">
                 Install in 30 seconds
             </a>
         </div>
     </section>
 
     <!-- PROBLEM -->
-    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
-        <h2 class="text-2xl font-bold mb-4">The problem</h2>
-        <p class="text-gray-400 text-lg">
+    <section class="section-glow max-w-3xl mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold mb-5">The problem</h2>
+        <p class="text-gray-400 text-lg leading-relaxed">
             AI agents need to pay for services autonomously. But giving them a private key 
-            means a bug or hack can drain the entire account. Manual approval defeats the purpose 
-            of autonomy.
+            means a bug or hack can drain the entire account. Manual approval defeats the 
+            purpose of autonomy.
         </p>
     </section>
 
     <!-- SOLUTION -->
-    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
-        <h2 class="text-2xl font-bold mb-6">The solution</h2>
-        <p class="text-gray-400 text-lg mb-8">
+    <section class="section-glow max-w-4xl mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold mb-6">The solution</h2>
+        <p class="text-gray-400 text-lg leading-relaxed mb-10">
             Mandate SDK lets the owner sign a mandate with their passkey that defines 
             spending limits. The agent pays only within those limits.
         </p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="card p-6">
-                <div class="accent text-2xl mb-2">🔐</div>
-                <h3 class="font-semibold mb-1">Passkey-signed</h3>
-                <p class="text-sm text-gray-500">Owner signs with WebAuthn. No private key exposed.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="card p-7">
+                <div class="accent text-3xl mb-3">🔐</div>
+                <h3 class="font-semibold text-lg mb-2">Passkey-signed</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">Owner signs with WebAuthn. No private key exposed.</p>
             </div>
-            <div class="card p-6">
-                <div class="accent text-2xl mb-2">⛓️</div>
-                <h3 class="font-semibold mb-1">On-chain verified</h3>
-                <p class="text-sm text-gray-500">P256 precompile validates every payment on Monad.</p>
+            <div class="card p-7">
+                <div class="accent text-3xl mb-3">⛓️</div>
+                <h3 class="font-semibold text-lg mb-2">On-chain verified</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">P256 precompile validates every payment on Monad.</p>
             </div>
-            <div class="card p-6">
-                <div class="accent text-2xl mb-2">🚫</div>
-                <h3 class="font-semibold mb-1">No custody</h3>
-                <p class="text-sm text-gray-500">The contract never holds funds. Payments go directly.</p>
+            <div class="card p-7">
+                <div class="accent text-3xl mb-3">🚫</div>
+                <h3 class="font-semibold text-lg mb-2">No custody</h3>
+                <p class="text-sm text-gray-500 leading-relaxed">The contract never holds funds. Payments go directly.</p>
             </div>
         </div>
     </section>
 
     <!-- HOW IT WORKS -->
-    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
-        <h2 class="text-2xl font-bold mb-6">How it works</h2>
-        <div class="card p-6 text-center">
+    <section class="section-glow max-w-4xl mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold mb-8">How it works</h2>
+        <div class="card p-8 text-center">
             <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-sm">
-                <div class="px-4 py-2 rounded border border-gray-700">Owner</div>
-                <div class="text-gray-600">→</div>
-                <div class="px-4 py-2 rounded border border-gray-700">MandateRegistry</div>
-                <div class="text-gray-600">→</div>
-                <div class="px-4 py-2 rounded border border-gray-700">PaymentGate</div>
-                <div class="text-gray-600">→</div>
-                <div class="px-4 py-2 rounded border border-gray-700">Recipient</div>
+                <div class="px-5 py-3 rounded-lg border border-violet-500/30 bg-violet-500/5">Owner</div>
+                <div class="text-violet-500 text-xl">→</div>
+                <div class="px-5 py-3 rounded-lg border border-violet-500/30 bg-violet-500/5">MandateRegistry</div>
+                <div class="text-violet-500 text-xl">→</div>
+                <div class="px-5 py-3 rounded-lg border border-violet-500/30 bg-violet-500/5">PaymentGate</div>
+                <div class="text-violet-500 text-xl">→</div>
+                <div class="px-5 py-3 rounded-lg border border-violet-500/30 bg-violet-500/5">Recipient</div>
             </div>
         </div>
     </section>
 
     <!-- INSTALL -->
-    <section id="install" class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
-        <h2 class="text-2xl font-bold mb-6">Install in 30 seconds</h2>
+    <section id="install" class="section-glow max-w-3xl mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold mb-8">Install in 30 seconds</h2>
         <pre><code>npm install github:chan30038917-hue/mandate-sdk</code></pre>
-        <p class="text-gray-400 mt-6 mb-4">Then use it in 10 lines:</p>
+        <p class="text-gray-400 mt-8 mb-5 text-lg">Then use it in 10 lines:</p>
         <pre><code>import { MandateSDK } from "mandate-sdk";
 
 const sdk = new MandateSDK({ privateKey: process.env.PRIVATE_KEY });
@@ -121,25 +300,25 @@ const result = await sdk.pay({
     </section>
 
     <!-- CONTRACTS -->
-    <section class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900">
-        <h2 class="text-2xl font-bold mb-6">Verified contracts on Monad Mainnet</h2>
+    <section class="section-glow max-w-3xl mx-auto px-6 py-20">
+        <h2 class="text-3xl font-bold mb-8">Verified contracts on Monad Mainnet</h2>
         <div class="space-y-4">
-            <div class="card p-5">
-                <div class="text-sm text-gray-500 mb-1">MandateRegistry</div>
-                <code class="text-sm">0x7695Cf7a86d6D08b5283a69c10f94b014D421649</code>
+            <div class="card p-6">
+                <div class="text-sm text-gray-500 mb-2 uppercase tracking-wide">MandateRegistry</div>
+                <code class="text-sm break-all">0x7695Cf7a86d6D08b5283a69c10f94b014D421649</code>
             </div>
-            <div class="card p-5">
-                <div class="text-sm text-gray-500 mb-1">PaymentGate</div>
-                <code class="text-sm">0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD</code>
+            <div class="card p-6">
+                <div class="text-sm text-gray-500 mb-2 uppercase tracking-wide">PaymentGate</div>
+                <code class="text-sm break-all">0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD</code>
             </div>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <footer class="max-w-3xl mx-auto px-6 py-16 border-t border-gray-900 text-center text-gray-600 text-sm">
-        <p>Mandate SDK — built on Monad Mainnet</p>
-        <p class="mt-2">
-            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="hover:text-gray-400">GitHub</a>
+    <footer class="section-glow max-w-3xl mx-auto px-6 py-16 text-center text-gray-600 text-sm">
+        <p class="mb-3">Mandate SDK — built on Monad Mainnet</p>
+        <p>
+            <a href="https://github.com/chan30038917-hue/mandate-sdk" class="hover:text-violet-400 transition-colors">GitHub</a>
         </p>
     </footer>
 
