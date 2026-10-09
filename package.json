@@ -1,0 +1,40 @@
+{
+  "name": "mandate-sdk",
+  "version": "0.1.0",
+  "description": "SDK para mandatos de pago verificables con passkey en Monad",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chan30038917-hue/mandate-sdk.git"
+  },
+  "scripts": {
+    "test": "node test/test.mjs"
+  },
+  "keywords": [
+    "monad",
+    "passkey",
+    "webauthn",
+    "payments",
+    "mandate",
+    "p256",
+    "agent"
+  ],
+  "author": "chan30038917-hue",
+  "license": "MIT",
+  "dependencies": {
+    "@noble/curves": "^2.0.0",
+    "@noble/hashes": "^2.0.0",
+    "ethers": "^6.13.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
