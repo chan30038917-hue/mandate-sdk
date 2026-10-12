@@ -15,8 +15,9 @@
     "type": "git",
     "url": "https://github.com/chan30038917-hue/mandate-sdk.git"
   },
-  "scripts": {
-    "test": "node test/test.mjs"
+    "scripts": {
+    "test": "node --test test/regression.test.mjs",
+    "test:e2e": "node test/test.mjs"
   },
   "keywords": [
     "monad",

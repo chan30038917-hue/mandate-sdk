@@ -7,17 +7,40 @@ const DEFAULT_REGISTRY = "0x7695Cf7a86d6D08b5283a69c10f94b014D421649";
 const DEFAULT_GATE = "0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD";
 
 export class MandateSDK {
-  constructor({ privateKey, rpcUrl, registryAddress, gateAddress }) {
+  constructor({
+    privateKey,
+    rpcUrl = DEFAULT_RPC,
+    registryAddress = DEFAULT_REGISTRY,
+    gateAddress = DEFAULT_GATE,
+    chainId = 143,
+  }) {
     if (!privateKey) throw new Error("privateKey es requerido");
-    this.provider = new ethers.JsonRpcProvider(rpcUrl || DEFAULT_RPC);
+    this.provider = new ethers.JsonRpcProvider(rpcUrl);
     this.wallet = new ethers.Wallet(privateKey, this.provider);
-    this.registryAddress = registryAddress || DEFAULT_REGISTRY;
-    this.gateAddress = gateAddress || DEFAULT_GATE;
+    this.registryAddress = registryAddress;
+    this.gateAddress = gateAddress;
+    this.expectedChainId = chainId;
+    this._chainChecked = false;
     this.registry = new ethers.Contract(this.registryAddress, MANDATE_REGISTRY_ABI, this.wallet);
     this.gate = new ethers.Contract(this.gateAddress, PAYMENT_GATE_ABI, this.wallet);
   }
 
+  async _ensureChain() {
+    if (this._chainChecked) return;
+    const network = await this.provider.getNetwork();
+    const actual = Number(network.chainId);
+    if (actual !== this.expectedChainId) {
+      throw new Error(
+        `Chain ID mismatch: el RPC devuelve chainId ${actual}, ` +
+        `pero las direcciones configuradas son para chain ${this.expectedChainId}. ` +
+        `¿Mezclaste CONTRACTS.monadTestnet con un RPC de Mainnet (o viceversa)?`
+      );
+    }
+    this._chainChecked = true;
+  }
+
   async info() {
+    await this._ensureChain();
     const network = await this.provider.getNetwork();
     const balance = await this.provider.getBalance(this.wallet.address);
     const feeBps = await this.gate.feeBps();
@@ -39,6 +62,8 @@ export class MandateSDK {
   async registerMandate({ maxPerTx, maxPerPeriod, periodSeconds = 86400, validDays = 30 }) {
     if (!maxPerTx) throw new Error("maxPerTx es requerido");
     if (!maxPerPeriod) throw new Error("maxPerPeriod es requerido");
+
+    await this._ensureChain();
 
     const passkey = generatePasskey();
     const mandateId = ethers.keccak256(ethers.toUtf8Bytes(`mandate-${Date.now()}-${Math.random()}`));
@@ -122,7 +147,14 @@ export class MandateSDK {
     if (!amount) throw new Error("amount es requerido");
     if (!recipient) throw new Error("recipient es requerido");
 
+    await this._ensureChain();
+
     const amountWei = ethers.parseEther(amount);
+
+    // Calcular fee ANTES de enviar la tx, en wei (bigint)
+    const feeWei = await this.gate.calculateFee(amountWei);
+    const netWei = amountWei - feeWei;
+
     const paymentNonce = ethers.keccak256(ethers.toUtf8Bytes(`pay-${Date.now()}-${Math.random()}`));
 
     const tx = await this.gate.authorizePayment(
@@ -136,14 +168,11 @@ export class MandateSDK {
     );
     const receipt = await tx.wait();
 
-    const fee = await this.calculateFee(amount);
-    const netAmount = (Number(amount) - Number(fee)).toString();
-
     return {
       tx: tx.hash,
       receipt,
-      fee,
-      netAmount,
+      fee: ethers.formatEther(feeWei),
+      netAmount: ethers.formatEther(netWei),
       paymentNonce,
     };
   }
