@@ -1,5 +1,5 @@
 {
-  "name": "mandate-sdk",
+  "name": "@chan30/mandate-sdk",
   "version": "0.2.0",
   "description": "SDK para mandatos de pago verificables con passkey en Monad",
   "type": "module",
