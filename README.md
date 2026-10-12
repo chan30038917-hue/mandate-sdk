@@ -6,13 +6,11 @@ SDK para mandatos de pago verificables con passkey en Monad.
 
 ## Instalacion
 
-```
 npm install github:chan30038917-hue/mandate-sdk
-```
 
 ## Que es esto
 
-Mandate SDK es la **capa de verificacion de limites de gasto** para agentes autonomos en Monad. Permite que el dueno de un agente firme un "mandato" con su passkey (WebAuthn) que define: maximo por transaccion, maximo por periodo, y expiracion. El agente paga solo, dentro de esos limites, con verificacion on-chain.
+Mandate SDK es la capa de verificacion de limites de gasto para agentes autonomos en Monad. Permite que el dueno de un agente firme un mandato con su passkey (WebAuthn) que define: maximo por transaccion, maximo por periodo, y expiracion. El agente paga solo, dentro de esos limites, con verificacion on-chain.
 
 No es una plataforma. Es una primitiva que cualquier agente puede integrar.
 
@@ -20,65 +18,50 @@ No es una plataforma. Es una primitiva que cualquier agente puede integrar.
 
 Estos son contratos inteligentes, no billeteras.
 
-**MandateRegistry** — Almacena los mandatos firmados con passkey y valida los limites de gasto.
+MandateRegistry: Almacena los mandatos firmados con passkey y valida los limites de gasto.
 
-Contrato: `0x7695Cf7a86d6D08b5283a69c10f94b014D421649`
+Contrato: 0x7695Cf7a86d6D08b5283a69c10f94b014D421649
 
 https://monadscan.com/address/0x7695Cf7a86d6D08b5283a69c10f94b014D421649
 
-**PaymentGate** — Autoriza los pagos, verifica el mandato, cobra la comision y envia el pago neto.
+PaymentGate: Autoriza los pagos, verifica el mandato, cobra la comision y envia el pago neto.
 
-Contrato: `0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD`
+Contrato: 0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD
 
 https://monadscan.com/address/0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD
 
 ## Red
 
-- **Red:** Monad Mainnet
-- **Chain ID:** `143`
-- **RPC:** `https://rpc.monad.xyz`
-- **Explorador:** https://monadscan.com
-- **Moneda:** MON
+- Red: Monad Mainnet
+- Chain ID: 143
+- RPC: https://rpc.monad.xyz
+- Explorador: https://monadscan.com
+- Moneda: MON
 
 ## Caso de uso real: agente que paga APIs
 
 Un agente quiere pagar 0.5 MON por una llamada a una API de precios. El dueno del agente ya no tiene que aprobar cada pago.
 
-```javascript
-import { MandateSDK } from "mandate-sdk";
-
-const sdk = new MandateSDK({ privateKey: process.env.PRIVATE_KEY });
-
-// 1. El dueno firma un mandato (una vez)
-const { mandateId, passkey } = await sdk.registerMandate({
-  maxPerTx: "1",      // maximo 1 MON por transaccion
-  maxPerPeriod: "10", // maximo 10 MON por dia
-});
-
-// 2. El agente paga la API automaticamente
-const result = await sdk.pay({
-  mandateId,
-  passkey,
-  amount: "0.5",
-  recipient: "0xAPI...",
-});
-
-console.log("Pago exitoso. Comision:", result.fee, "MON");
-```
-
-El agente paga solo. El dueno mantiene el control. No hay custodia de fondos.
+El flujo es: el dueno firma un mandato una vez con maxPerTx de 1 MON y maxPerPeriod de 10 MON. Luego el agente paga 0.5 MON a la API automaticamente. El dueno mantiene el control, no hay custodia de fondos.
 
 ## Uso rapido
 
-```javascript
+Importa el SDK:
+
 import { MandateSDK } from "mandate-sdk";
 
+Crea una instancia:
+
 const sdk = new MandateSDK({ privateKey: process.env.PRIVATE_KEY });
+
+Registra un mandato:
 
 const { mandateId, passkey } = await sdk.registerMandate({
   maxPerTx: "10",
   maxPerPeriod: "100",
 });
+
+Paga:
 
 const result = await sdk.pay({
   mandateId,
@@ -88,27 +71,30 @@ const result = await sdk.pay({
 });
 
 console.log("Comision:", result.fee, "MON");
-```
 
 ## API
 
-### new MandateSDK({ privateKey, rpcUrl?, registryAddress?, gateAddress? })
+### new MandateSDK({ privateKey, rpcUrl, registryAddress, gateAddress, chainId })
 
 Crea una instancia del SDK.
+
+Acepta chainId (default 143, Mainnet) y valida que el chainId del RPC coincida con las direcciones configuradas. Si no coincide, lanza error en el primer uso.
 
 ### sdk.info()
 
 Devuelve informacion de la conexion: chainId, wallet, balance, comision, feeRecipient.
 
-### sdk.registerMandate({ maxPerTx, maxPerPeriod, periodSeconds?, validDays? })
+### sdk.registerMandate({ maxPerTx, maxPerPeriod, periodSeconds, validDays })
 
-Registra un mandato firmado con passkey. Devuelve { mandateId, passkey, tx, receipt }.
+Registra un mandato firmado con passkey. Devuelve mandateId, passkey, tx, receipt.
 
 Guarda el passkey en un lugar seguro. Lo necesitas para todos los pagos futuros.
 
 ### sdk.pay({ mandateId, passkey, amount, recipient })
 
-Autoriza un pago. Devuelve { tx, receipt, fee, netAmount }.
+Autoriza un pago. Devuelve tx, receipt, fee, netAmount, paymentNonce.
+
+Nota de tipos: fee y netAmount son strings formateados (ejemplo 0.03), no Number. Esto preserva precision con montos de muchos decimales. Si necesitas operar con ellos, usa ethers.parseEther().
 
 ### sdk.calculateFee(amountMON)
 
@@ -134,9 +120,9 @@ Consulta cuanto se ha gastado en el periodo actual.
 
 ## Integracion como primitiva
 
-Mandate SDK esta disenado para ser integrado por otras plataformas de agentes. Si ya tienes un agente que paga APIs o servicios, puedes anadir el `PaymentGate` como capa de verificacion de limites sin cambiar tu arquitectura.
+Mandate SDK esta disenado para ser integrado por otras plataformas de agentes. Si ya tienes un agente que paga APIs o servicios, puedes anadir el PaymentGate como capa de verificacion de limites sin cambiar tu arquitectura.
 
-El `PaymentGate` es un contrato independiente. Cualquier aplicacion puede llamarlo para verificar que un pago respeta los limites firmados por el dueno.
+El PaymentGate es un contrato independiente. Cualquier aplicacion puede llamarlo para verificar que un pago respeta los limites firmados por el dueno.
 
 ## Limitaciones conocidas
 
@@ -157,6 +143,19 @@ El formato de entrada es msg_hash(32) + r(32) + s(32) + pubkey_x(32) + pubkey_y(
 - Integracion opcional con el Reputation Registry de ERC-8004 para verificar la reputacion del destinatario antes de autorizar un pago.
 - Mas ejemplos de integracion con agentes MCP y frameworks de agentes.
 - Documentacion de casos de uso por tipo de agente (trading, datos, computo).
+
+## Changelog
+
+### 0.2.0
+
+- Breaking: sdk.pay() ahora devuelve fee y netAmount como string en vez de Number. Preserva precision con montos de muchos decimales.
+- CONTRACTS.monadTestnet usa registryAddress y gateAddress (antes mandateRegistry y paymentGate) para matchear el constructor.
+- CONTRACTS incluye un preset monadMainnet con direcciones de produccion.
+- El constructor valida que el chainId del RPC coincida con las direcciones configuradas.
+
+### 0.1.0
+
+- Version inicial.
 
 ## Licencia
 
