@@ -6,7 +6,7 @@ SDK para mandatos de pago verificables con passkey en Monad.
 
 ## Instalacion
 
-npm install github:chan30038917-hue/mandate-sdk
+npm install @chan30/mandate-sdk
 
 ## Que es esto
 
